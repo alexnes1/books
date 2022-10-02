@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS books (
     root_path VARCHAR,
     relative_path VARCHAR,
     filename VARCHAR,
-    filesize INT
+    filesize INT,
+    UNIQUE (root_path, relative_path, filename)
 );
 CREATE INDEX IF NOT EXISTS idx_books_title ON books (title);
 CREATE INDEX IF NOT EXISTS idx_books_lang ON books (lang);
@@ -43,7 +44,7 @@ CREATE TABLE IF NOT EXISTS books_authors (
 
 CREATE TABLE IF NOT EXISTS genres (
     id INTEGER PRIMARY KEY,
-    name VARCHAR
+    name VARCHAR NOT NULL UNIQUE
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_genre_name ON genres (name);
 
@@ -58,7 +59,7 @@ CREATE TABLE IF NOT EXISTS books_genres (
 
 CREATE TABLE IF NOT EXISTS keywords (
     id INTEGER PRIMARY KEY,
-    name VARCHAR
+    name VARCHAR NOT NULL UNIQUE
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_keyword_name ON keywords (name);
 

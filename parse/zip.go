@@ -34,6 +34,7 @@ func walkZipArchive(root string, relativePath string, bookHandler *BookHandler, 
 				root:         root,
 				relativePath: relativePath,
 				filename:     f.Name,
+				filesize:     len(bytes),
 				data:         bytes,
 			}
 			bookChan <- book

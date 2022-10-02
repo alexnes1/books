@@ -43,11 +43,19 @@ func processFB2(raw rawBook) (storage.Book, error) {
 	}
 
 	for _, g := range metadata.Description.TitleInfo.Genre {
-		b.Genres = append(b.Genres, storage.Genre{Name: strings.Trim(g, " ")})
+		name := strings.Trim(g, " ")
+		if len(name) == 0 {
+			continue
+		}
+		b.Genres = append(b.Genres, storage.Genre{Name: name})
 	}
 
 	for _, k := range strings.Split(metadata.Description.TitleInfo.Keywords, ",") {
-		b.Keywords = append(b.Keywords, storage.Keyword{Name: strings.Trim(k, " ")})
+		name := strings.Trim(k, " ")
+		if len(name) == 0 {
+			continue
+		}
+		b.Keywords = append(b.Keywords, storage.Keyword{Name: name})
 	}
 
 	return b, nil

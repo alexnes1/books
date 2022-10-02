@@ -3,7 +3,6 @@ package storage
 import (
 	"database/sql"
 	_ "embed"
-	"fmt"
 
 	_ "modernc.org/sqlite"
 )
@@ -42,10 +41,97 @@ func (s *SQLiteStorage) storeAuthor(a Author) (int, error) {
 	return id, err
 }
 
+func (s *SQLiteStorage) storeGenre(g Genre) (int, error) {
+	var id int
+	err := s.db.QueryRow(`INSERT INTO genres(name) VALUES (?)
+		ON CONFLICT (name) DO UPDATE SET name=excluded.name
+		RETURNING id;`,
+		g.Name,
+	).Scan(&id)
+	return id, err
+}
+
+func (s *SQLiteStorage) storeKeyword(k Keyword) (int, error) {
+	var id int
+	err := s.db.QueryRow(`INSERT INTO keywords(name) VALUES (?)
+	ON CONFLICT (name) DO UPDATE SET name=excluded.name
+		RETURNING id;`,
+		k.Name,
+	).Scan(&id)
+	return id, err
+}
+
 func (s *SQLiteStorage) StoreBook(b Book) error {
+	authorIds := []int{}
 	for _, a := range b.Authors {
 		id, err := s.storeAuthor(a)
-		fmt.Printf("Stored author [%s] with ID [%d] and ERROR [%s]\n", a, id, err)
+		if err != nil {
+			return err
+		}
+		authorIds = append(authorIds, id)
+		// fmt.Printf("Stored author [%s] with ID [%d] and ERROR [%s]\n", a, id, err)
 	}
+
+	genreIds := []int{}
+	for _, g := range b.Genres {
+		id, err := s.storeGenre(g)
+		if err != nil {
+			return err
+		}
+		genreIds = append(genreIds, id)
+		// fmt.Printf("Stored genre [%s] with ID [%d] and ERROR [%s]\n", g, id, err)
+	}
+
+	keywordIds := []int{}
+	for _, k := range b.Keywords {
+		id, err := s.storeKeyword(k)
+		if err != nil {
+			return err
+		}
+		keywordIds = append(keywordIds, id)
+		// fmt.Printf("Stored keyword [%s] with ID [%d] and ERROR [%s]\n", k, id, err)
+	}
+
+	var bookId int
+	err := s.db.QueryRow(`INSERT INTO books(
+			title, annotation, bookdate, 
+			publisher, publish_city, publish_year, ISBN, lang, src_lang, 
+			root_path, relative_path, filename, filesize)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		RETURNING id;`,
+		b.Title, b.Annotation, b.Date, b.Publisher, b.PublishCity, b.PublishYear,
+		b.ISBN, b.Lang, b.SrcLang, b.File.RootPath, b.File.RelativePath, b.File.Filename, b.File.Filesize,
+	).Scan(&bookId)
+	if err != nil {
+		return err
+	}
+
+	if len(authorIds) > 0 {
+		for _, id := range authorIds {
+			_, err := s.db.Exec(`INSERT INTO books_authors (book_id, author_id) VALUES (?, ?);`, bookId, id)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(genreIds) > 0 {
+		for _, id := range genreIds {
+			_, err := s.db.Exec(`INSERT INTO books_genres (book_id, genre_id) VALUES (?, ?);`, bookId, id)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(genreIds) > 0 {
+		for _, id := range keywordIds {
+			_, err := s.db.Exec(`INSERT INTO books_keywords (book_id, keyword_id) VALUES (?, ?);`, bookId, id)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
