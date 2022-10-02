@@ -1,14 +1,14 @@
 package storage
 
 import (
-	_ "embed"
 	"fmt"
 	"os"
 	"strings"
 )
 
-//go:embed schema.sql
-var schema string
+type Storage interface {
+	StoreBook(b Book) error
+}
 
 type stringer interface {
 	String() string
@@ -95,8 +95,4 @@ func (b *Book) AuthorsString() string {
 func (b *Book) String() string {
 	return fmt.Sprintf("Title: %s\nAuthors: %s\nGenres: %s\nKeywords: %s\nFile: %s\n\n\n",
 		b.Title, sliceToString(b.Authors), sliceToString(b.Genres), sliceToString(b.Keywords), b.File)
-}
-
-func PrintSchema() {
-	fmt.Println(schema)
 }

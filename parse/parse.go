@@ -127,19 +127,30 @@ func walkBookfiles(root string, bookHandler *BookHandler, nonBookHandler *NonBoo
 	wg.Done()
 }
 
-func processRawBook(bookChan <-chan rawBook, bookHandler *BookHandler, wg *sync.WaitGroup) {
+func processRawBook(bookChan <-chan rawBook, bookHandler *BookHandler, storeChan chan<- storage.Book, wg *sync.WaitGroup) {
 	for book := range bookChan {
 		book, err := bookHandler.process(book)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		log.Println(book.String())
+		storeChan <- book
 	}
 	wg.Done()
 }
 
-func AddBooksInfoToDatabase(dir string, queueSize int, numWorkers int) {
+func saveBooks(storeChan <-chan storage.Book, db storage.Storage, wg *sync.WaitGroup) {
+	for book := range storeChan {
+		log.Println(book.String())
+		err := db.StoreBook(book)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+	wg.Done()
+}
+
+func AddBooksInfoToDatabase(dir string, queueSize int, numWorkers int, db storage.Storage) {
 	nbh := NewNonBookHandler()
 	nbh.register(".zip", walkZipArchive)
 	nbh.register(".fbz", walkZipArchive)
@@ -148,13 +159,22 @@ func AddBooksInfoToDatabase(dir string, queueSize int, numWorkers int) {
 	bh.register(".fb2", processFB2)
 
 	booksChan := make(chan rawBook, queueSize)
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go walkBookfiles(dir, bh, nbh, booksChan, wg)
+	storeChan := make(chan storage.Book)
 
+	processGroup := &sync.WaitGroup{}
+	processGroup.Add(1)
+	go walkBookfiles(dir, bh, nbh, booksChan, processGroup)
 	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go processRawBook(booksChan, bh, wg)
+		processGroup.Add(1)
+		go processRawBook(booksChan, bh, storeChan, processGroup)
 	}
-	wg.Wait()
+
+	storeGroup := &sync.WaitGroup{}
+	storeGroup.Add(1)
+	go saveBooks(storeChan, db, storeGroup)
+
+	processGroup.Wait()
+	close(storeChan)
+	storeGroup.Wait()
+
 }

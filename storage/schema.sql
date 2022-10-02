@@ -14,10 +14,10 @@ CREATE TABLE IF NOT EXISTS books (
     filename VARCHAR,
     filesize INT
 );
-CREATE INDEX idx_books_lang ON books (title);
-CREATE INDEX idx_books_lang ON books (lang);
-CREATE INDEX idx_books_publisher ON books (publisher);
-CREATE INDEX idx_books_isbn ON books (ISBN);
+CREATE INDEX IF NOT EXISTS idx_books_title ON books (title);
+CREATE INDEX IF NOT EXISTS idx_books_lang ON books (lang);
+CREATE INDEX IF NOT EXISTS idx_books_publisher ON books (publisher);
+CREATE INDEX IF NOT EXISTS idx_books_isbn ON books (ISBN);
 
 CREATE TABLE IF NOT EXISTS authors (
     id INTEGER PRIMARY KEY,
@@ -26,10 +26,11 @@ CREATE TABLE IF NOT EXISTS authors (
 	last_name VARCHAR,
 	nickname VARCHAR,
 	homepage VARCHAR,
-	email VARCHAR
+	email VARCHAR,
+    UNIQUE (first_name, middle_name, last_name)
 );
-CREATE INDEX idx_authors_lname ON authors (last_name);
-CREATE INDEX idx_authors_fullname ON authors (first_name, last_name);
+CREATE INDEX IF NOT EXISTS idx_authors_lname ON authors (last_name);
+CREATE INDEX IF NOT EXISTS idx_authors_flname ON authors (first_name, last_name);
 
 CREATE TABLE IF NOT EXISTS books_authors (
     id INTEGER PRIMARY KEY,
@@ -42,9 +43,9 @@ CREATE TABLE IF NOT EXISTS books_authors (
 
 CREATE TABLE IF NOT EXISTS genres (
     id INTEGER PRIMARY KEY,
-    name VARCHAR,
+    name VARCHAR
 );
-CREATE UNIQUE INDEX idx_genre_name ON genres (name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_genre_name ON genres (name);
 
 CREATE TABLE IF NOT EXISTS books_genres (
     id INTEGER PRIMARY KEY,
@@ -57,9 +58,9 @@ CREATE TABLE IF NOT EXISTS books_genres (
 
 CREATE TABLE IF NOT EXISTS keywords (
     id INTEGER PRIMARY KEY,
-    name VARCHAR,
+    name VARCHAR
 );
-CREATE UNIQUE INDEX idx_keyword_name ON keywords (name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_keyword_name ON keywords (name);
 
 CREATE TABLE IF NOT EXISTS books_keywords (
     id INTEGER PRIMARY KEY,

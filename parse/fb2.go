@@ -3,8 +3,8 @@ package parse
 import (
 	"strings"
 
+	"github.com/alexnes1/books/fb2"
 	"github.com/alexnes1/books/storage"
-	"github.com/centrypoint/fb2"
 )
 
 func processFB2(raw rawBook) (storage.Book, error) {
@@ -15,15 +15,15 @@ func processFB2(raw rawBook) (storage.Book, error) {
 	}
 
 	b := storage.Book{}
-	b.Title = metadata.Description.TitleInfo.BookTitle
-	b.Annotation = metadata.Description.TitleInfo.Annotation
-	b.Date = metadata.Description.TitleInfo.Date
-	b.Publisher = metadata.Description.PublishInfo.Publisher
-	b.PublishCity = metadata.Description.PublishInfo.City
+	b.Title = strings.Trim(metadata.Description.TitleInfo.BookTitle, " ")
+	b.Annotation = strings.Trim(metadata.Description.TitleInfo.Annotation, " ")
+	b.Date = strings.Trim(metadata.Description.TitleInfo.Date, " ")
+	b.Publisher = strings.Trim(metadata.Description.PublishInfo.Publisher, " ")
+	b.PublishCity = strings.Trim(metadata.Description.PublishInfo.City, " ")
 	b.PublishYear = metadata.Description.PublishInfo.Year
-	b.ISBN = metadata.Description.PublishInfo.ISBN
-	b.Lang = metadata.Description.TitleInfo.Lang
-	b.SrcLang = metadata.Description.TitleInfo.SrcLang
+	b.ISBN = strings.Trim(metadata.Description.PublishInfo.ISBN, " ")
+	b.Lang = strings.Trim(metadata.Description.TitleInfo.Lang, " ")
+	b.SrcLang = strings.Trim(metadata.Description.TitleInfo.SrcLang, " ")
 	b.File = storage.FileInfo{
 		RootPath:     raw.root,
 		RelativePath: raw.relativePath,
@@ -33,17 +33,17 @@ func processFB2(raw rawBook) (storage.Book, error) {
 
 	for _, a := range metadata.Description.TitleInfo.Author {
 		b.Authors = append(b.Authors, storage.Author{
-			FirstName:  a.FirstName,
-			LastName:   a.LastName,
-			MiddleName: a.MiddleName,
-			Nickname:   a.Nickname,
-			Homepage:   a.HomePage,
-			Email:      a.Email,
+			FirstName:  strings.Trim(a.FirstName, " "),
+			LastName:   strings.Trim(a.LastName, " "),
+			MiddleName: strings.Trim(a.MiddleName, " "),
+			Nickname:   strings.Trim(a.Nickname, " "),
+			Homepage:   strings.Trim(a.HomePage, " "),
+			Email:      strings.Trim(a.Email, " "),
 		})
 	}
 
 	for _, g := range metadata.Description.TitleInfo.Genre {
-		b.Genres = append(b.Genres, storage.Genre{Name: g})
+		b.Genres = append(b.Genres, storage.Genre{Name: strings.Trim(g, " ")})
 	}
 
 	for _, k := range strings.Split(metadata.Description.TitleInfo.Keywords, ",") {
