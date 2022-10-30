@@ -15,5 +15,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	parse.AddBooksInfoToDatabase(".", 20, 4, &db)
+	parse.AddBooksInfoToDatabase(".", 50, 16, &db)
 }

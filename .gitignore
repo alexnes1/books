@@ -21,3 +21,4 @@ schemas
 *.sqlite-journal
 
 **/vendor/**
+**/books/**
